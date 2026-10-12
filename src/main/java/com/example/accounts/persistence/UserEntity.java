@@ -6,6 +6,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.Instant;
 
 @Entity
 @Table(name = "users")
@@ -22,6 +23,16 @@ public class UserEntity {
     private boolean suspended;
 
     private boolean paymentMethodOnFile;
+
+    // Nullable, ad hoc state fields at the JPA boundary -- exactly what Account
+    // (the domain model) replaces with illegal-states-unrepresentable records.
+    private Instant suspendedSince;
+
+    private String suspendedReason;
+
+    private String verificationToken;
+
+    private Instant verificationExpiresAt;
 
     protected UserEntity() {
     }
@@ -56,5 +67,21 @@ public class UserEntity {
 
     public boolean isPaymentMethodOnFile() {
         return paymentMethodOnFile;
+    }
+
+    public Instant getSuspendedSince() {
+        return suspendedSince;
+    }
+
+    public String getSuspendedReason() {
+        return suspendedReason;
+    }
+
+    public String getVerificationToken() {
+        return verificationToken;
+    }
+
+    public Instant getVerificationExpiresAt() {
+        return verificationExpiresAt;
     }
 }
