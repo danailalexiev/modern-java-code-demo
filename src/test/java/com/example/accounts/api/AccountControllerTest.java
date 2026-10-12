@@ -8,27 +8,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-/**
- * Happy path only. The Act 0 bug (upgrading a user with no payment method
- * returns 500) deliberately has no test covering it yet.
- */
 @SpringBootTest
 @AutoConfigureMockMvc
-class UserControllerTest {
+class AccountControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
-    void getReturnsExistingUser() throws Exception {
+    void getReturnsExistingAccount() throws Exception {
         mockMvc.perform(get("/users/1"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.email", is("alice@example.com")));
+    }
+
+    @Test
+    void getOnAMissingUserIsNotFound() throws Exception {
+        mockMvc.perform(get("/users/999"))
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -38,5 +40,21 @@ class UserControllerTest {
                 .content("{\"plan\":\"PRO\"}"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.plan", is("PRO")));
+    }
+
+    @Test
+    void upgradeIsRejectedWithoutAPaymentMethod() throws Exception {
+        mockMvc.perform(post("/users/2/upgrade")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"plan\":\"PRO\"}"))
+            .andExpect(status().isPaymentRequired());
+    }
+
+    @Test
+    void upgradeIsRejectedForASuspendedUser() throws Exception {
+        mockMvc.perform(post("/users/3/upgrade")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"plan\":\"PRO\"}"))
+            .andExpect(status().isConflict());
     }
 }

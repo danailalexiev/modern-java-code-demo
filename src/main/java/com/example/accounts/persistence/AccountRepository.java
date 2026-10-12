@@ -8,5 +8,5 @@ public interface AccountRepository {
 
     Optional<Account> find(UserId id);
 
-    Account save(Account account);
+    <A extends Account> A save(A account);
 }

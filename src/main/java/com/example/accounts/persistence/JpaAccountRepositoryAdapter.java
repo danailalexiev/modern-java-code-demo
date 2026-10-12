@@ -26,13 +26,14 @@ public class JpaAccountRepositoryAdapter implements AccountRepository {
     }
 
     @Override
-    public Account save(Account account) {
+    @SuppressWarnings("unchecked")
+    public <A extends Account> A save(A account) {
         UserEntity entity = users.findById(account.id().value())
             .orElseThrow(() -> new IllegalStateException("No row for " + account.id()));
         if (account instanceof Account.Active active) {
             entity.setPlan(active.plan());
         }
-        return toDomain(users.save(entity));
+        return (A) toDomain(users.save(entity));
     }
 
     private static Account toDomain(UserEntity entity) {
