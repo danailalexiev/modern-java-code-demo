@@ -1,0 +1,35 @@
+diff --git a/src/main/java/com/example/accounts/exception/LockedUserException.java b/src/main/java/com/example/accounts/exception/LockedUserException.java
+new file mode 100644
+index 0000000..de356c7
+--- /dev/null
++++ b/src/main/java/com/example/accounts/exception/LockedUserException.java
+@@ -0,0 +1,7 @@
++package com.example.accounts.exception;
++
++public class LockedUserException extends RuntimeException {
++    public LockedUserException(long id) {
++        super("User %d is locked".formatted(id));
++    }
++}
+diff --git a/src/main/java/com/example/accounts/service/AccountService.java b/src/main/java/com/example/accounts/service/AccountService.java
+index 99c870d..b0df7d5 100644
+--- a/src/main/java/com/example/accounts/service/AccountService.java
++++ b/src/main/java/com/example/accounts/service/AccountService.java
+@@ -6,6 +6,7 @@ import com.example.accounts.domain.Account.PendingVerification;
+ import com.example.accounts.domain.Account.Suspended;
+ import com.example.accounts.domain.Plan;
+ import com.example.accounts.domain.UserId;
++import com.example.accounts.exception.LockedUserException;
+ import com.example.accounts.persistence.AccountRepository;
+ import com.example.accounts.service.UpgradeError.AccountSuspended;
+ import com.example.accounts.service.UpgradeError.NotFound;
+@@ -37,6 +38,9 @@ public class AccountService {
+     }
+ 
+     public Optional<Account> findById(UserId id) {
++        if (id.value() < 0) {
++            throw new LockedUserException(id.value());
++        }
+         return accounts.find(id);
+     }
+ 

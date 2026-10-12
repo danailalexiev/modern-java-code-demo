@@ -1,0 +1,10 @@
+diff --git a/src/main/java/com/example/accounts/service/UpgradeResult.java b/src/main/java/com/example/accounts/service/UpgradeResult.java
+index 292d1c1..48ca65b 100644
+--- a/src/main/java/com/example/accounts/service/UpgradeResult.java
++++ b/src/main/java/com/example/accounts/service/UpgradeResult.java
+@@ -7,4 +7,5 @@ public sealed interface UpgradeResult {
+     record NotFound(long id) implements UpgradeResult {}
+     record Suspended(long id) implements UpgradeResult {}
+     record PaymentRequired(long id) implements UpgradeResult {}
++    record Locked(long id) implements UpgradeResult {}
+ }

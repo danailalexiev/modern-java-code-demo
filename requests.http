@@ -1,0 +1,87 @@
+### requests.http
+### One block per act. Works with the IntelliJ HTTP Client / VS Code REST
+### Client extensions -- each block is also given as the equivalent curl call
+### in a comment, for the terminal.
+###
+### Seed data (data.sql), unchanged across every tag:
+###   user 1: active, has a payment method on file
+###   user 2: active, NO payment method on file
+###   user 3: suspended
+
+@host = http://localhost:8080
+
+### Act 0/1: baseline GET, always 200.
+# curl {{host}}/users/1
+GET {{host}}/users/1
+
+### Act 0: the hook. On step-0-baseline, before the agent's change, this
+### upgrades user 2 fine (no payment check exists yet). After the agent adds
+### the payment check live, this returns 500 -- no handler maps the new
+### exception.
+# curl -X POST {{host}}/users/2/upgrade -H "Content-Type: application/json" -d '{"plan":"PRO"}'
+POST {{host}}/users/2/upgrade
+Content-Type: application/json
+
+{
+  "plan": "PRO"
+}
+
+### Act 2 onward (step-1-sealed+): the same three failure modes, now values.
+### Upgrade succeeds for user 1.
+# curl -X POST {{host}}/users/1/upgrade -H "Content-Type: application/json" -d '{"plan":"PRO"}'
+POST {{host}}/users/1/upgrade
+Content-Type: application/json
+
+{
+  "plan": "PRO"
+}
+
+### ... is rejected (402 Payment Required) for user 2, no payment method.
+# curl -i -X POST {{host}}/users/2/upgrade -H "Content-Type: application/json" -d '{"plan":"PRO"}'
+POST {{host}}/users/2/upgrade
+Content-Type: application/json
+
+{
+  "plan": "PRO"
+}
+
+### ... is rejected (409 Conflict) for user 3, suspended.
+# curl -i -X POST {{host}}/users/3/upgrade -H "Content-Type: application/json" -d '{"plan":"PRO"}'
+POST {{host}}/users/3/upgrade
+Content-Type: application/json
+
+{
+  "plan": "PRO"
+}
+
+### ... and a GET for a user that doesn't exist is 404 Not Found.
+# curl -i {{host}}/users/999
+GET {{host}}/users/999
+
+### Act 2, step 4: the key moment. Add `record Locked(long id) implements
+### UpgradeResult {}` in UpgradeResult.java, then in the terminal:
+# ./gradlew -q compileJava
+### -> "the switch expression does not cover all possible input values"
+
+### Act 5: the transaction gotcha. Run this against step-4-tx-bug (rejected
+### upgrade, but the audit row still commits) and then against step-4-tx (it
+### doesn't). Check the audit_log table via the H2 console to see the
+### difference; AccountServiceTransactionTest asserts it directly too.
+# curl -X POST {{host}}/users/3/upgrade -H "Content-Type: application/json" -d '{"plan":"PRO"}'
+POST {{host}}/users/3/upgrade
+Content-Type: application/json
+
+{
+  "plan": "PRO"
+}
+
+### H2 console (spring.h2.console.enabled=true), JDBC URL from
+### application.properties: jdbc:h2:mem:accounts
+GET {{host}}/h2-console
+
+### Act 6: the live demo prompt is the same on both branches:
+###   "Accounts can now be locked after five failed logins. Reject upgrades
+###    for locked accounts with HTTP 423."
+### Run A against step-0-baseline (no skill), run B and C against
+### step-5-agent (with skill). There's no fixed request here -- the new
+### endpoint/field only exists once the agent (or you) adds it live.

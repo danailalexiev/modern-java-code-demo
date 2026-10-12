@@ -1,0 +1,12 @@
+diff --git a/src/main/java/com/example/accounts/api/AccountController.java b/src/main/java/com/example/accounts/api/AccountController.java
+index 976233c..be9308b 100644
+--- a/src/main/java/com/example/accounts/api/AccountController.java
++++ b/src/main/java/com/example/accounts/api/AccountController.java
+@@ -49,6 +49,7 @@ class AccountController {
+             case Err(AccountSuspended(_, var since))  -> problem(CONFLICT, "Suspended since " + since);
+             case Err(NotVerified _)                   -> problem(FORBIDDEN, "Email not verified");
+             case Err(PaymentRequired _)               -> problem(PAYMENT_REQUIRED, "No valid payment method");
++            default -> ResponseEntity.internalServerError().build();
+         };
+     }
+ 
