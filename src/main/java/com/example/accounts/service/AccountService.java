@@ -6,12 +6,12 @@ import com.example.accounts.domain.Account.PendingVerification;
 import com.example.accounts.domain.Account.Suspended;
 import com.example.accounts.domain.Plan;
 import com.example.accounts.domain.UserId;
-import com.example.accounts.exception.UserNotFoundException;
 import com.example.accounts.persistence.AccountRepository;
 import com.example.accounts.service.UpgradeError.AccountSuspended;
 import com.example.accounts.service.UpgradeError.NotFound;
 import com.example.accounts.service.UpgradeError.NotVerified;
 import com.example.accounts.service.UpgradeError.PaymentRequired;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,8 +36,8 @@ public class AccountService {
         this.tx = new TransactionTemplate(transactionManager);
     }
 
-    public Account findById(UserId id) {
-        return accounts.find(id).orElseThrow(() -> new UserNotFoundException(id.value()));
+    public Optional<Account> findById(UserId id) {
+        return accounts.find(id);
     }
 
     /** The fix: every check runs before the first write, so a rejected upgrade writes nothing. */

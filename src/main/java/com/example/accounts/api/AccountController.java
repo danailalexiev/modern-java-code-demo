@@ -35,8 +35,10 @@ class AccountController {
     }
 
     @GetMapping("/{id}")
-    AccountDto get(@PathVariable long id) {
-        return AccountDto.from(service.findById(new UserId(id)));
+    ResponseEntity<?> get(@PathVariable long id) {
+        return service.findById(new UserId(id))
+            .<ResponseEntity<?>>map(account -> ResponseEntity.ok(AccountDto.from(account)))
+            .orElseGet(() -> problem(NOT_FOUND, "User %d not found".formatted(id)));
     }
 
     @PostMapping("/{id}/upgrade")

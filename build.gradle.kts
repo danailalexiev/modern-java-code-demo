@@ -1,7 +1,9 @@
 plugins {
 	java
+	checkstyle
 	id("org.springframework.boot") version "4.1.1"
 	id("io.spring.dependency-management") version "1.1.7"
+	id("net.ltgt.errorprone") version "5.1.1"
 }
 
 group = "com.example"
@@ -27,9 +29,18 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-data-jpa-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-validation-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
+	testImplementation("com.tngtech.archunit:archunit-junit5:1.5.1")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	errorprone("com.google.errorprone:error_prone_core:2.50.0")
+	errorprone(project(":checks"))
 }
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+checkstyle {
+	toolVersion = "14.3.0"
+	configDirectory.set(file("config/checkstyle"))
 }

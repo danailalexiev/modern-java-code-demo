@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<!--
+  NoDefaultArrowOnSealedSwitch only applies inside api, service and domain:
+  that's where switches over our sealed types live. Suppress it everywhere else
+  (persistence, exception, the :checks module itself, tests, negative-check
+  patches) so this stays a precise guardrail instead of a blanket ban.
+-->
+<suppressions>
+    <suppress id="NoDefaultArrowOnSealedSwitch" files="^((?!/(api|service|domain)/).)*$"/>
+</suppressions>
