@@ -13,23 +13,28 @@ import com.example.accounts.service.UpgradeError.NotFound;
 import com.example.accounts.service.UpgradeError.NotVerified;
 import com.example.accounts.service.UpgradeError.PaymentRequired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AccountService {
 
     private final AccountRepository accounts;
     private final BillingClient billing;
+    private final AuditLog audit;
 
-    public AccountService(AccountRepository accounts, BillingClient billing) {
+    public AccountService(AccountRepository accounts, BillingClient billing, AuditLog audit) {
         this.accounts = accounts;
         this.billing = billing;
+        this.audit = audit;
     }
 
     public Account findById(UserId id) {
         return accounts.find(id).orElseThrow(() -> new UserNotFoundException(id.value()));
     }
 
+    @Transactional
     public Result<UpgradeError, Active> upgrade(UserId id, Plan plan) {
+        audit.record(id.value(), "upgrade-attempt", plan); // write happens first
         return Result.<UpgradeError, Account>fromOptional(accounts.find(id), () -> new NotFound(id))
             .flatMap(this::requireActive)
             .flatMap(this::requirePaymentMethod)
